@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Clock, MapPin, Phone, Mail, Shield, Stethoscope } from 'lucide-react';
+import { Clock, MapPin, Phone, Mail, Shield } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { AppointmentType, PracticeProfile } from '../types';
 import {
   getPracticeBySlug,
   listPublishedAppointmentTypes,
 } from '../lib/api';
-import { publicBookingPath } from '../lib/booking';
+import { formatRand, publicBookingPath } from '../lib/booking';
 import { isSupabaseConfigured } from '../lib/supabase';
+import logo from '../assets/Praxient-Logo.jpeg';
 
 export const PublicPracticeAppointmentsPage: React.FC = () => {
   const { practiceSlug } = useParams();
@@ -44,39 +45,41 @@ export const PublicPracticeAppointmentsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-paper">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-200 border-t-navy-800"></div>
       </div>
     );
   }
 
   if (error || !practice) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+      <div className="min-h-screen flex items-center justify-center bg-paper p-6">
         <p className="text-slate-600">{error || 'Practice not found.'}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-slate-900 text-white">
-        <div className="max-w-3xl mx-auto px-4 py-6 flex items-center gap-3">
-          <div className="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center">
-            <Stethoscope className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-lg font-bold leading-tight">Praxient</p>
-            <p className="text-xs text-slate-400">Praxient by ThusoMed</p>
-          </div>
+    <div className="min-h-screen bg-paper">
+      <header className="bg-paper border-b border-slate-200/80">
+        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-center">
+          <img
+            src={logo}
+            alt="Praxient — Healthcare Connected"
+            className="h-12 w-auto object-contain"
+          />
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+        <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+          <div className="h-1.5 bg-gradient-to-r from-navy-800 to-teal-500" />
+          <div className="p-6 space-y-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{practice.practiceName}</h1>
-            <p className="text-sky-600 font-medium">{practice.practitionerName}</p>
+            <h1 className="text-2xl font-bold text-navy-900 tracking-tight">
+              {practice.practiceName}
+            </h1>
+            <p className="text-teal-700 font-medium">{practice.practitionerName}</p>
             <p className="text-sm text-slate-500">{practice.specialty}</p>
           </div>
           {practice.hpcsaNumber && (
@@ -100,34 +103,44 @@ export const PublicPracticeAppointmentsPage: React.FC = () => {
               {practice.email}
             </div>
           </div>
+          </div>
         </div>
 
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-slate-900">Available appointments</h2>
+          <h2 className="text-lg font-semibold text-navy-900">Available appointments</h2>
           {types.length === 0 && (
             <p className="text-sm text-slate-500">No published appointment types yet.</p>
           )}
           {types.map((type) => (
-            <div key={type.id} className="bg-white rounded-xl border border-slate-200 p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="font-semibold text-slate-900">{type.name}</h3>
-                  <p className="text-sm text-slate-600 mt-1">{type.description}</p>
-                  <div className="flex items-center gap-3 text-xs text-slate-500 mt-2">
+            <div
+              key={type.id}
+              className="bg-white rounded-lg border border-slate-200 shadow-sm p-5 hover:border-teal-300 transition-colors"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-navy-900">{type.name}</h3>
+                  {type.description && (
+                    <p className="text-sm text-slate-600 mt-1">{type.description}</p>
+                  )}
+                  <div className="flex items-center gap-3 text-[13px] text-slate-500 mt-2">
                     <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
+                      <Clock className="w-3.5 h-3.5" />
                       {type.durationMinutes} min
                     </span>
-                    <span>R{type.price.toLocaleString()}</span>
+                    <span className="font-medium text-navy-800">{formatRand(type.price)}</span>
                   </div>
                 </div>
-                <Link to={publicBookingPath(practice.slug, type.slug)}>
-                  <Button>Book</Button>
+                <Link to={publicBookingPath(practice.slug, type.slug)} className="shrink-0">
+                  <Button>Book appointment</Button>
                 </Link>
               </div>
             </div>
           ))}
         </div>
+
+        <p className="text-center text-xs text-slate-400 pt-2 pb-6">
+          Powered by Praxient · Healthcare Connected
+        </p>
       </main>
     </div>
   );

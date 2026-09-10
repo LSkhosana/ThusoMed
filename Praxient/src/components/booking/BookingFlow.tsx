@@ -23,9 +23,11 @@ import {
   calculateDepositAmount,
   collectAnswerText,
   extractPatientFields,
+  formatRand,
   generateConfirmationNumber,
   generateTimeSlots,
   missingRequiredFields,
+  toLocalDateString,
 } from '../../lib/booking';
 import {
   countTypeBookingsForDate,
@@ -62,6 +64,8 @@ interface BookingFlowProps {
   availability: AvailabilitySettings;
   appointmentType: AppointmentType;
   compact?: boolean;
+  /** When true, no data is written to the database (used by the admin Preview tab). */
+  previewMode?: boolean;
 }
 
 export const BookingFlow: React.FC<BookingFlowProps> = ({
@@ -69,6 +73,7 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({
   availability,
   appointmentType,
   compact = false,
+  previewMode = false,
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState('');
@@ -111,7 +116,7 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({
     for (let i = 1; i <= 14; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = toLocalDateString(date);
       const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
       const isBlocked = availability.blockedDates.includes(dateStr);
       const isAvailableDay = availability.availableDays.includes(dayName);
@@ -163,6 +168,18 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({
     );
     if (bookingMissing.length || preMissing.length) {
       showToast(`Please complete: ${[...bookingMissing, ...preMissing].join(', ')}`, 'error');
+      return;
+    }
+
+    if (previewMode) {
+      // Preview never writes to the database.
+      setAppointmentId(null);
+      setConfirmationNumber(generateConfirmationNumber(appointmentType.name));
+      setPaymentStatus(appointmentType.requiresDeposit ? 'pending' : 'not_required');
+      setPaymentAmount(calculateDepositAmount(appointmentType));
+      setBookingComplete(true);
+      setCurrentStep(5);
+      showToast('Preview complete — nothing was saved.', 'info');
       return;
     }
 
@@ -222,6 +239,11 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({
   };
 
   const mockPay = async (status: 'paid' | 'failed') => {
+    if (previewMode) {
+      setPaymentStatus(status);
+      showToast('Preview only — payment state not saved.', 'info');
+      return;
+    }
     if (!appointmentId) return;
     try {
       const updated = await updateAppointment(appointmentId, { paymentStatus: status });
@@ -261,18 +283,18 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({
             <h3 className="text-lg font-semibold text-slate-900 mb-4">Select a Date</h3>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2">
               {availableDates.map((date) => {
-                const dateObj = new Date(date.date);
+                const dateObj = new Date(`${date.date}T00:00:00`);
                 return (
                   <button
                     key={date.date}
                     onClick={() => date.available && setSelectedDate(date.date)}
                     disabled={!date.available}
-                    className={`p-3 rounded-lg text-center transition-all ${
+                    className={`p-3 rounded-md text-center transition-all ${
                       selectedDate === date.date
-                        ? 'bg-sky-600 text-white'
+                        ? 'bg-navy-800 text-white shadow-sm'
                         : date.available
-                        ? 'bg-white border border-slate-200 hover:border-sky-300 text-slate-900'
-                        : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                        ? 'bg-white border border-slate-200 hover:border-teal-400 hover:bg-teal-50/40 text-slate-900'
+                        : 'bg-slate-50 text-slate-300 cursor-not-allowed'
                     }`}
                   >
                     <div className="text-xs font-medium">
@@ -303,10 +325,10 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({
                   <button
                     key={slot}
                     onClick={() => setSelectedTime(slot)}
-                    className={`p-3 rounded-lg text-center transition-all ${
+                    className={`p-3 rounded-md text-center text-sm font-medium tabular-nums transition-all ${
                       selectedTime === slot
-                        ? 'bg-sky-600 text-white'
-                        : 'bg-white border border-slate-200 hover:border-sky-300 text-slate-900'
+                        ? 'bg-navy-800 text-white shadow-sm'
+                        : 'bg-white border border-slate-200 hover:border-teal-400 hover:bg-teal-50/40 text-slate-900'
                     }`}
                   >
                     {slot}
@@ -338,12 +360,12 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({
                 <p className="text-sm text-amber-800">{practice.emergencyDisclaimer}</p>
               </div>
             )}
-            <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
+            <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
               <div className="flex items-start gap-2">
-                <Shield className="w-5 h-5 text-sky-600 mt-0.5" />
+                <Shield className="w-5 h-5 text-teal-700 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-sky-900">Privacy notice</p>
-                  <p className="text-xs text-sky-700 mt-1">
+                  <p className="text-sm font-medium text-teal-900">Privacy notice</p>
+                  <p className="text-xs text-teal-800 mt-1">
                     This demo stores submitted answers in Supabase for the stakeholder walkthrough.
                   </p>
                 </div>
@@ -364,16 +386,20 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({
             <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Check className="w-8 h-8 text-emerald-600" />
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">Booking Confirmed!</h3>
+            <h3 className="text-2xl font-bold text-navy-900 mb-2">
+              {previewMode ? 'Preview Complete' : 'Booking Confirmed'}
+            </h3>
             <p className="text-slate-600 mb-6">
-              Your appointment has been submitted successfully.
+              {previewMode
+                ? 'This is how patients see their confirmation. Nothing was saved.'
+                : 'Your appointment has been submitted successfully.'}
             </p>
             <div className="bg-slate-50 rounded-lg p-6 text-left max-w-md mx-auto mb-6">
               <h4 className="font-semibold text-slate-900 mb-4">Appointment Details</h4>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Confirmation Number:</span>
-                  <span className="font-mono font-bold text-sky-600">{confirmationNumber}</span>
+                  <span className="font-mono font-bold text-teal-700">{confirmationNumber}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Appointment Type:</span>
@@ -383,7 +409,7 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({
                   <span className="text-slate-500">Date:</span>
                   <span className="font-medium">
                     {selectedDate
-                      ? new Date(selectedDate).toLocaleDateString('en-ZA', {
+                      ? new Date(`${selectedDate}T00:00:00`).toLocaleDateString('en-ZA', {
                           weekday: 'long',
                           month: 'long',
                           day: 'numeric',
@@ -411,7 +437,7 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({
                 <div className="flex items-center gap-2 mb-2">
                   <CreditCard className="w-4 h-4 text-slate-600" />
                   <p className="text-sm font-medium text-slate-900">
-                    Mock payment · R{paymentAmount.toLocaleString()}
+                    Mock payment · {formatRand(paymentAmount)}
                   </p>
                 </div>
                 <p className="text-xs text-slate-500 mb-3">
@@ -452,21 +478,32 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({
 
   return (
     <div className={compact ? '' : 'space-y-6'}>
-      <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-        <div className="bg-sky-50 px-6 py-4 border-b border-slate-200">
-          <p className="text-sm text-slate-500">Booking with</p>
-          <h2 className="text-lg font-semibold text-slate-900">{appointmentType.name}</h2>
-          <p className="text-sm text-slate-600">
-            {appointmentType.durationMinutes} min · R{appointmentType.price.toLocaleString()}
-          </p>
+      <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
+        <div className="bg-navy-800 px-6 py-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-teal-300 font-semibold">
+                Booking with {practice.practiceName}
+              </p>
+              <h2 className="text-lg font-semibold text-white mt-0.5">{appointmentType.name}</h2>
+              <p className="text-sm text-navy-200">
+                {appointmentType.durationMinutes} min · {formatRand(appointmentType.price)}
+              </p>
+            </div>
+            {previewMode && (
+              <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full bg-white/10 text-teal-200 border border-white/20">
+                Preview
+              </span>
+            )}
+          </div>
         </div>
         <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
           <div className="flex items-center justify-between overflow-x-auto">
             {STEPS.map((step, index) => (
               <div key={step.number} className="flex items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    currentStep >= step.number ? 'bg-sky-600 text-white' : 'bg-slate-200 text-slate-500'
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                    currentStep >= step.number ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-500'
                   }`}
                 >
                   {currentStep > step.number || bookingComplete ? (
@@ -485,7 +522,7 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({
                 {index < STEPS.length - 1 && (
                   <div
                     className={`hidden sm:block w-8 h-0.5 mx-2 ${
-                      currentStep > step.number ? 'bg-sky-600' : 'bg-slate-200'
+                      currentStep > step.number ? 'bg-teal-600' : 'bg-slate-200'
                     }`}
                   />
                 )}

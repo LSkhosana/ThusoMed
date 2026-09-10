@@ -81,8 +81,8 @@ export const AppointmentSchedulePage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Availability</h1>
-          <p className="text-slate-600">
+          <h1 className="text-2xl font-bold text-navy-900 tracking-tight">Availability</h1>
+          <p className="text-slate-500 mt-1">
             One start and end time applies to every selected day in this demo.
           </p>
         </div>
@@ -107,7 +107,7 @@ export const AppointmentSchedulePage: React.FC = () => {
                     onClick={() => toggleDay(day)}
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-sky-600 text-white'
+                        ? 'bg-navy-800 text-white'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >

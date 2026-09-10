@@ -14,6 +14,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { usePractice } from '../context/PracticeContext';
 import { listAppointmentTypes } from '../lib/api';
+import { formatRand } from '../lib/booking';
 import { AppointmentType } from '../types';
 
 export const PatientAppPreviewPage: React.FC = () => {
@@ -56,16 +57,16 @@ export const PatientAppPreviewPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-navy-900 tracking-tight">
             Patient App Preview
           </h1>
-          <p className="text-slate-600">
+          <p className="text-slate-500 mt-1">
             How your practice appears in the Praxient patient app
           </p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-sky-50 border border-sky-200 rounded-full">
-          <Smartphone className="w-4 h-4 text-sky-600" />
-          <span className="text-xs font-medium text-sky-700">
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-teal-50 border border-teal-200 rounded-full">
+          <Smartphone className="w-4 h-4 text-teal-700" />
+          <span className="text-xs font-medium text-teal-800">
             Mobile Preview
           </span>
         </div>
@@ -82,11 +83,11 @@ export const PatientAppPreviewPage: React.FC = () => {
 
       {/* Mobile Phone Frame */}
       <div className="max-w-sm mx-auto">
-        <div className="bg-slate-900 rounded-[40px] p-3 shadow-2xl">
+        <div className="bg-navy-900 rounded-[40px] p-3 shadow-2xl">
           <div className="bg-white rounded-[32px] overflow-hidden">
             {/* Phone Header */}
-            <div className="bg-sky-600 px-5 py-4 text-white">
-              <p className="text-xs text-sky-200">Praxient</p>
+            <div className="bg-navy-800 px-5 py-4 text-white">
+              <p className="text-xs text-teal-300">Praxient</p>
               <p className="text-lg font-bold">Find a Doctor</p>
             </div>
 
@@ -95,7 +96,7 @@ export const PatientAppPreviewPage: React.FC = () => {
               {/* Doctor Card */}
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 {/* Profile Header */}
-                <div className="bg-gradient-to-br from-sky-50 to-white p-4">
+                <div className="bg-gradient-to-br from-navy-50 to-white p-4">
                   <div className="flex items-start gap-3">
                     <div className="w-16 h-16 bg-slate-200 rounded-xl flex items-center justify-center flex-shrink-0">
                       <User className="w-8 h-8 text-slate-400" />
@@ -104,7 +105,7 @@ export const PatientAppPreviewPage: React.FC = () => {
                       <h2 className="text-lg font-bold text-slate-900">
                         {profile?.practitionerName || 'Doctor Name'}
                       </h2>
-                      <p className="text-sm text-sky-600 font-medium">
+                      <p className="text-sm text-teal-700 font-medium">
                         {profile?.specialty || 'Specialty'}
                       </p>
                       <div className="flex items-center gap-1 mt-1">
@@ -195,7 +196,7 @@ export const PatientAppPreviewPage: React.FC = () => {
                         {profile.services.slice(0, 6).map((service, index) => (
                           <span
                             key={index}
-                            className="text-xs bg-sky-50 text-sky-700 px-2 py-0.5 rounded-full"
+                            className="text-xs bg-teal-50 text-teal-800 px-2 py-0.5 rounded-full"
                           >
                             {service}
                           </span>
@@ -234,8 +235,8 @@ export const PatientAppPreviewPage: React.FC = () => {
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-sky-600">
-                            R{type.price.toLocaleString()}
+                          <p className="font-bold text-navy-800">
+                            {formatRand(type.price)}
                           </p>
                         </div>
                         <ChevronRight className="w-5 h-5 text-slate-400 ml-2" />
@@ -267,7 +268,7 @@ export const PatientAppPreviewPage: React.FC = () => {
             {/* Bottom Navigation */}
             <div className="bg-white border-t border-slate-200 px-6 py-3">
               <div className="flex justify-around">
-                <button className="flex flex-col items-center text-sky-600">
+                <button className="flex flex-col items-center text-teal-700">
                   <User className="w-5 h-5" />
                   <span className="text-xs mt-1">Doctors</span>
                 </button>
@@ -289,8 +290,8 @@ export const PatientAppPreviewPage: React.FC = () => {
       <Card title="Patient App Features" subtitle="What patients will see">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <User className="w-4 h-4 text-sky-600" />
+            <div className="w-8 h-8 bg-navy-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <User className="w-4 h-4 text-navy-800" />
             </div>
             <div>
               <p className="font-medium text-slate-900">Doctor Profiles</p>

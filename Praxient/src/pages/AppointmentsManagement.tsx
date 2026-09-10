@@ -8,7 +8,7 @@ import { Textarea } from '../components/ui/Textarea';
 import { useToast } from '../components/ui/Toast';
 import { usePractice } from '../context/PracticeContext';
 import { listAppointmentTypes, listAppointments, updateAppointment } from '../lib/api';
-import { answerToString } from '../lib/booking';
+import { answerToString, formatRand } from '../lib/booking';
 import {
   Appointment,
   AppointmentStatus,
@@ -26,6 +26,7 @@ export const AppointmentsManagementPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
   const { showToast } = useToast();
 
   const loadData = async () => {
@@ -40,9 +41,11 @@ export const AppointmentsManagementPage: React.FC = () => {
 
   useEffect(() => {
     if (!practice) return;
-    void loadData().catch((err) => {
-      showToast(err instanceof Error ? err.message : 'Unable to load appointments', 'error');
-    });
+    void loadData()
+      .catch((err) => {
+        showToast(err instanceof Error ? err.message : 'Unable to load appointments', 'error');
+      })
+      .finally(() => setIsLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [practice?.id]);
 
@@ -97,13 +100,13 @@ export const AppointmentsManagementPage: React.FC = () => {
 
   const getStatusBadge = (status: Appointment['status']) => {
     const styles = {
-      pending: 'bg-amber-100 text-amber-700',
-      confirmed: 'bg-emerald-100 text-emerald-700',
-      cancelled: 'bg-red-100 text-red-700',
-      completed: 'bg-slate-100 text-slate-700',
+      pending: 'bg-amber-50 text-amber-700 border border-amber-200',
+      confirmed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+      cancelled: 'bg-red-50 text-red-700 border border-red-200',
+      completed: 'bg-slate-100 text-slate-600 border border-slate-200',
     };
     return (
-      <span className={`text-xs font-medium px-2 py-1 rounded-full ${styles[status]}`}>
+      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${styles[status]}`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
@@ -111,10 +114,10 @@ export const AppointmentsManagementPage: React.FC = () => {
 
   const getPaymentBadge = (status: Appointment['paymentStatus']) => {
     const styles = {
-      not_required: 'bg-slate-100 text-slate-600',
-      pending: 'bg-amber-100 text-amber-700',
-      paid: 'bg-emerald-100 text-emerald-700',
-      failed: 'bg-red-100 text-red-700',
+      not_required: 'bg-slate-100 text-slate-600 border border-slate-200',
+      pending: 'bg-amber-50 text-amber-700 border border-amber-200',
+      paid: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+      failed: 'bg-red-50 text-red-700 border border-red-200',
     };
     const labels = {
       not_required: 'Not Required',
@@ -123,7 +126,7 @@ export const AppointmentsManagementPage: React.FC = () => {
       failed: 'Failed',
     };
     return (
-      <span className={`text-xs font-medium px-2 py-1 rounded-full ${styles[status]}`}>
+      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${styles[status]}`}>
         {labels[status]}
       </span>
     );
@@ -153,33 +156,46 @@ export const AppointmentsManagementPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Appointments</h1>
-        <p className="text-slate-600">Manage patient appointments and booking requests</p>
+        <h1 className="text-2xl font-bold text-navy-900 tracking-tight">Appointments</h1>
+        <p className="text-slate-500 mt-1">Manage patient appointments and booking requests</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-          <p className="text-sm text-slate-500">Total</p>
-          <p className="text-2xl font-bold text-slate-900">{appointments.length}</p>
-        </div>
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <p className="text-sm text-amber-700">Pending</p>
-          <p className="text-2xl font-bold text-amber-900">
-            {appointments.filter((item) => item.status === 'pending').length}
-          </p>
-        </div>
-        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-          <p className="text-sm text-emerald-700">Confirmed</p>
-          <p className="text-2xl font-bold text-emerald-900">
-            {appointments.filter((item) => item.status === 'confirmed').length}
-          </p>
-        </div>
-        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-          <p className="text-sm text-slate-600">Completed</p>
-          <p className="text-2xl font-bold text-slate-900">
-            {appointments.filter((item) => item.status === 'completed').length}
-          </p>
-        </div>
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-[74px] bg-white rounded-lg border border-slate-200 animate-pulse"
+            />
+          ))
+        ) : (
+          <>
+            <div className="bg-white rounded-lg border border-slate-200 p-4">
+              <p className="text-[13px] text-slate-500">Total</p>
+              <p className="text-2xl font-bold text-navy-900 tabular-nums">
+                {appointments.length}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg border border-slate-200 p-4">
+              <p className="text-[13px] text-amber-600 font-medium">Pending</p>
+              <p className="text-2xl font-bold text-navy-900 tabular-nums">
+                {appointments.filter((item) => item.status === 'pending').length}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg border border-slate-200 p-4">
+              <p className="text-[13px] text-emerald-600 font-medium">Confirmed</p>
+              <p className="text-2xl font-bold text-navy-900 tabular-nums">
+                {appointments.filter((item) => item.status === 'confirmed').length}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg border border-slate-200 p-4">
+              <p className="text-[13px] text-slate-500 font-medium">Completed</p>
+              <p className="text-2xl font-bold text-navy-900 tabular-nums">
+                {appointments.filter((item) => item.status === 'completed').length}
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       <Card>
@@ -190,7 +206,7 @@ export const AppointmentsManagementPage: React.FC = () => {
               placeholder="Search by patient name, email, or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
           </div>
           <Select
@@ -284,7 +300,14 @@ export const AppointmentsManagementPage: React.FC = () => {
               })}
             </tbody>
           </table>
-          {filteredAppointments.length === 0 && (
+          {isLoading && (
+            <div className="space-y-2 py-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="h-12 bg-slate-50 rounded-md animate-pulse" />
+              ))}
+            </div>
+          )}
+          {!isLoading && filteredAppointments.length === 0 && (
             <div className="text-center py-8 text-slate-500">
               <Calendar className="w-12 h-12 mx-auto mb-3 text-slate-300" />
               <p>No appointments found</p>
@@ -340,7 +363,7 @@ export const AppointmentsManagementPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-slate-500">Confirmation #:</span>
-                  <p className="font-mono font-bold text-sky-600">
+                  <p className="font-mono font-bold text-teal-700">
                     {selectedAppointment.confirmationNumber}
                   </p>
                 </div>
@@ -395,7 +418,7 @@ export const AppointmentsManagementPage: React.FC = () => {
                 <div>
                   <span className="text-slate-500">Payment amount:</span>
                   <p className="font-medium text-slate-900">
-                    R{selectedAppointment.paymentAmount.toLocaleString()}
+                    {formatRand(selectedAppointment.paymentAmount)}
                   </p>
                 </div>
               </div>
@@ -437,9 +460,12 @@ export const AppointmentsManagementPage: React.FC = () => {
               onBlur={(e) =>
                 void persistAppointment(selectedAppointment.id, {
                   notes: e.target.value,
+                }).then((updated) => {
+                  if (updated) showToast('Notes saved', 'success');
                 })
               }
               rows={3}
+              helpText="Notes save automatically when you click away"
             />
           </div>
         )}

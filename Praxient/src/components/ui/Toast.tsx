@@ -33,14 +33,14 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     success: <CheckCircle className="w-5 h-5 text-emerald-500" />,
     error: <AlertTriangle className="w-5 h-5 text-red-500" />,
     warning: <AlertTriangle className="w-5 h-5 text-amber-500" />,
-    info: <Info className="w-5 h-5 text-sky-500" />,
+    info: <Info className="w-5 h-5 text-teal-500" />,
   };
 
   const colors = {
-    success: 'bg-emerald-50 border-emerald-200',
-    error: 'bg-red-50 border-red-200',
-    warning: 'bg-amber-50 border-amber-200',
-    info: 'bg-sky-50 border-sky-200',
+    success: 'bg-white border-emerald-200',
+    error: 'bg-white border-red-200',
+    warning: 'bg-white border-amber-200',
+    info: 'bg-white border-teal-200',
   };
 
   return (

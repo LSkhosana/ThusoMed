@@ -20,6 +20,7 @@ import {
 import {
   DEFAULT_BOOKING_FORM_FIELDS,
   DEFAULT_PRE_CONSULTATION_FORM_FIELDS,
+  formatRand,
   isUrlSafeSlug,
   publicBookingPath,
   publicUrl,
@@ -37,6 +38,7 @@ export const AppointmentTypesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('Details');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -66,9 +68,11 @@ export const AppointmentTypesPage: React.FC = () => {
 
   useEffect(() => {
     if (!practice) return;
-    void loadTypes().catch((err) => {
-      showToast(err instanceof Error ? err.message : 'Unable to load appointment types', 'error');
-    });
+    void loadTypes()
+      .catch((err) => {
+        showToast(err instanceof Error ? err.message : 'Unable to load appointment types', 'error');
+      })
+      .finally(() => setIsLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [practice?.id]);
 
@@ -225,55 +229,63 @@ export const AppointmentTypesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Appointment Types</h1>
-          <p className="text-slate-600">
-            Details, forms, preview, and publish live on each appointment type.
+          <h1 className="text-2xl font-bold text-navy-900 tracking-tight">Appointment Types</h1>
+          <p className="text-slate-500 mt-1">
+            Details, forms, preview, and publishing for each appointment type.
           </p>
         </div>
         <Button onClick={openCreateModal}>
           <Plus className="w-4 h-4 mr-2" />
-          Create Appointment Type
+          New Appointment Type
         </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card title="Types" subtitle="Select a type to configure">
-          <div className="space-y-3">
-            {types.map((type) => (
-              <button
-                key={type.id}
-                onClick={() => {
-                  setSelectedId(type.id);
-                  setActiveTab('Details');
-                }}
-                className={`w-full text-left p-3 rounded-lg border ${
-                  selectedId === type.id
-                    ? 'border-sky-600 bg-sky-50'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-medium text-slate-900">{type.name}</p>
-                    <p className="text-xs text-slate-500">
-                      {type.durationMinutes} min · R{type.price.toLocaleString()}
-                    </p>
+          <div className="space-y-2">
+            {isLoading &&
+              Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-16 rounded-md border border-slate-100 bg-slate-50 animate-pulse"
+                />
+              ))}
+            {!isLoading &&
+              types.map((type) => (
+                <button
+                  key={type.id}
+                  onClick={() => {
+                    setSelectedId(type.id);
+                    setActiveTab('Details');
+                  }}
+                  className={`w-full text-left p-3 rounded-md border transition-colors ${
+                    selectedId === type.id
+                      ? 'border-navy-300 bg-navy-50 ring-1 ring-navy-200'
+                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-900 truncate">{type.name}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {type.durationMinutes} min · {formatRand(type.price)}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                        type.isPublished
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-slate-100 text-slate-600 border border-slate-200'
+                      }`}
+                    >
+                      {type.isPublished ? 'Published' : 'Draft'}
+                    </span>
                   </div>
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      type.isPublished
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    {type.isPublished ? 'Published' : 'Draft'}
-                  </span>
-                </div>
-              </button>
-            ))}
-            {types.length === 0 && (
+                </button>
+              ))}
+            {!isLoading && types.length === 0 && (
               <p className="text-sm text-slate-500 text-center py-6">No appointment types yet.</p>
             )}
           </div>
@@ -288,20 +300,22 @@ export const AppointmentTypesPage: React.FC = () => {
             </Card>
           ) : (
             <>
-              <div className="flex flex-wrap gap-2">
-                {TABS.map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                      activeTab === tab
-                        ? 'bg-sky-600 text-white'
-                        : 'bg-white border border-slate-200 text-slate-600'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
+              <div className="border-b border-slate-200 -mb-1">
+                <div className="flex gap-1 overflow-x-auto">
+                  {TABS.map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`whitespace-nowrap px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                        activeTab === tab
+                          ? 'border-teal-600 text-navy-900'
+                          : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {activeTab === 'Details' && (
@@ -446,6 +460,7 @@ export const AppointmentTypesPage: React.FC = () => {
                   practice={practice}
                   availability={availability}
                   appointmentType={selected}
+                  previewMode
                 />
               )}
 
@@ -459,20 +474,27 @@ export const AppointmentTypesPage: React.FC = () => {
                       onChange={(checked) => void handlePublish(checked)}
                     />
                     {selected.isPublished && (
-                      <div className="bg-slate-50 rounded-lg p-4 space-y-3">
-                        <p className="text-sm text-slate-600">Public booking link</p>
-                        <p className="text-sm font-mono break-all text-slate-900">{publicLink}</p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            void navigator.clipboard.writeText(publicLink);
-                            showToast('Link copied', 'success');
-                          }}
-                        >
-                          <Copy className="w-4 h-4 mr-2" />
-                          Copy
-                        </Button>
+                      <div className="rounded-md border border-teal-200 bg-teal-50 p-4 space-y-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-teal-800">
+                          Public booking link
+                        </p>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                          <p className="flex-1 text-sm font-mono break-all text-navy-900 bg-white border border-teal-200 rounded-md px-3 py-2">
+                            {publicLink}
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0"
+                            onClick={() => {
+                              void navigator.clipboard.writeText(publicLink);
+                              showToast('Link copied', 'success');
+                            }}
+                          >
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copy
+                          </Button>
+                        </div>
                       </div>
                     )}
                     {!selected.isActive && (

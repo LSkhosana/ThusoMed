@@ -144,10 +144,10 @@ export const PracticeProfilePage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-navy-900 tracking-tight">
             Practice Profile
           </h1>
-          <p className="text-slate-600">
+          <p className="text-slate-500 mt-1">
             Manage your practice information and public profile
           </p>
         </div>
@@ -191,7 +191,7 @@ export const PracticeProfilePage: React.FC = () => {
                 value={profile.slug}
                 onChange={(e) => handleChange('slug', e.target.value)}
                 required
-                helpText="Used in the public booking URL. Letters, numbers, and hyphens only."
+                helpText="Used in the public booking URL. Letters, numbers, and hyphens only. Changing this breaks links you have already shared."
               />
               <Input
                 label="Practitioner Name"
@@ -321,7 +321,7 @@ export const PracticeProfilePage: React.FC = () => {
                       onChange={(e) =>
                         handleOperatingHours('saturday', 'enabled', e.target.checked)
                       }
-                      className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                      className="rounded border-slate-300 text-navy-800 focus:ring-teal-500"
                     />
                     <span className="text-sm font-medium text-slate-700">
                       Saturday
@@ -354,7 +354,7 @@ export const PracticeProfilePage: React.FC = () => {
                       onChange={(e) =>
                         handleOperatingHours('sunday', 'enabled', e.target.checked)
                       }
-                      className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                      className="rounded border-slate-300 text-navy-800 focus:ring-teal-500"
                     />
                     <span className="text-sm font-medium text-slate-700">
                       Sunday
@@ -396,7 +396,7 @@ export const PracticeProfilePage: React.FC = () => {
         </div>
 
         {/* Live Preview */}
-        <div className="sticky top-24 h-fit">
+        <div className="lg:sticky lg:top-[72px] h-fit">
           <Card
             title="Profile Preview"
             subtitle="How your profile appears to patients"
@@ -419,7 +419,7 @@ export const PracticeProfilePage: React.FC = () => {
                   <h3 className="text-lg font-semibold text-slate-900">
                     {profile.practiceName || 'Practice Name'}
                   </h3>
-                  <p className="text-sky-600 font-medium">
+                  <p className="text-teal-700 font-medium">
                     {profile.practitionerName || 'Doctor Name'}
                   </p>
                   <p className="text-sm text-slate-500">
@@ -456,7 +456,7 @@ export const PracticeProfilePage: React.FC = () => {
                     {parseList(servicesInput).map((service, index) => (
                       <span
                         key={index}
-                        className="text-xs bg-sky-50 text-sky-700 px-2 py-1 rounded-full"
+                        className="text-xs bg-teal-50 text-teal-800 px-2 py-1 rounded-full"
                       >
                         {service}
                       </span>

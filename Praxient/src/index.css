@@ -5,10 +5,15 @@
 @layer base {
   body {
     @apply bg-slate-50 text-slate-900 antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 
   * {
     @apply border-slate-200;
+  }
+
+  ::selection {
+    @apply bg-teal-200 text-navy-900;
   }
 }
 

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import {
-  Stethoscope,
   LayoutDashboard,
   User,
   Calendar,
@@ -11,9 +10,11 @@ import {
   Settings,
   Menu,
   X,
-  AlertTriangle,
+  ExternalLink,
 } from 'lucide-react';
 import { usePractice } from '../context/PracticeContext';
+import { publicAppointmentsPath } from '../lib/booking';
+import logo from '../assets/Praxient-Logo.jpeg';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
@@ -24,129 +25,157 @@ const navItems = [
   { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
 
+const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
+  `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+    isActive
+      ? 'bg-navy-100 text-navy-900 font-semibold'
+      : 'text-slate-600 font-medium hover:bg-slate-100 hover:text-slate-900'
+  }`;
+
 export const DashboardLayout: React.FC = () => {
   const { practice, loading, error } = usePractice();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const publicPageUrl = practice ? publicAppointmentsPath(practice.slug) : null;
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-navy-900/40 z-40 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-slate-900 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed lg:sticky inset-y-0 lg:inset-y-auto lg:top-0 left-0 z-50 lg:z-30 w-64 h-full lg:h-screen bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out lg:transform-none ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         <div className="flex flex-col h-full">
-          <div className="px-6 py-4 border-b border-slate-800">
+          {/* Brand */}
+          <div className="px-4 pt-4 pb-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-sky-600 rounded-lg flex items-center justify-center">
-                  <Stethoscope className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <span className="text-lg font-bold text-white block leading-tight">Praxient</span>
-                  <span className="text-[10px] text-slate-400">Praxient by ThusoMed</span>
-                </div>
+              <div className="flex-1 rounded-lg bg-paper border border-slate-200/70 px-3 py-2.5">
+                <img
+                  src={logo}
+                  alt="Praxient — Healthcare Connected"
+                  className="h-9 w-full object-contain"
+                />
               </div>
               <button
                 onClick={() => setIsSidebarOpen(false)}
-                className="lg:hidden text-slate-400 hover:text-white"
+                className="lg:hidden ml-3 text-slate-400 hover:text-slate-600"
+                aria-label="Close menu"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-            {navItems.map((item) => (
+          {/* Navigation */}
+          <nav className="flex-1 px-3 py-2 overflow-y-auto">
+            <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              Practice
+            </p>
+            <div className="space-y-0.5">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === '/dashboard'}
+                  onClick={() => setIsSidebarOpen(false)}
+                  className={navLinkClasses}
+                >
+                  <item.icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                  {item.label}
+                </NavLink>
+              ))}
+            </div>
+
+            <p className="px-3 pt-6 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              Coming soon
+            </p>
+            <div className="space-y-0.5">
               <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === '/dashboard'}
+                to="/dashboard/patient-app"
                 onClick={() => setIsSidebarOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-sky-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  }`
-                }
+                className={navLinkClasses}
               >
-                <item.icon className="w-5 h-5" />
-                {item.label}
+                <Smartphone className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                Patient App Preview
               </NavLink>
-            ))}
-            <NavLink
-              to="/dashboard/patient-app"
-              onClick={() => setIsSidebarOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-sky-600 text-white'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                }`
-              }
-            >
-              <Smartphone className="w-5 h-5" />
-              Patient App Preview
-            </NavLink>
+            </div>
           </nav>
 
-          <div className="px-4 py-4 border-t border-slate-800">
-            <p className="text-sm font-medium text-white truncate">
-              {practice?.practitionerName || 'Demo practice'}
-            </p>
-            <p className="text-xs text-slate-400 truncate">
-              {practice?.practiceName || 'Praxient demo'}
-            </p>
+          {/* Practice identity */}
+          <div className="px-4 py-4 border-t border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-navy-800 text-white flex items-center justify-center text-sm font-semibold">
+                {(practice?.practitionerName || 'P')
+                  .replace(/^Dr\.?\s*/i, '')
+                  .charAt(0)
+                  .toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-slate-900 truncate">
+                  {practice?.practitionerName || 'Demo practice'}
+                </p>
+                <p className="text-xs text-slate-500 truncate">
+                  {practice?.practiceName || 'Praxient demo'}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 py-3 lg:px-6">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden text-slate-600 hover:text-slate-900"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-            <div className="flex-1 lg:flex-none" />
+        {/* Top bar */}
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 px-4 lg:px-6">
+          <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-full">
-                <AlertTriangle className="w-4 h-4 text-amber-600" />
-                <span className="text-xs font-medium text-amber-800">Demo Mode</span>
-              </div>
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="lg:hidden text-slate-600 hover:text-slate-900"
+                aria-label="Open menu"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-200 bg-amber-50 text-[11px] font-semibold text-amber-800 uppercase tracking-wide">
+                Demo environment
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {publicPageUrl && (
+                <a
+                  href={publicPageUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-navy-800 hover:bg-navy-50 transition-colors"
+                >
+                  View public page
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
             </div>
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-6">
-          <div className="mb-6 p-4 bg-sky-50 border border-sky-200 rounded-lg">
-            <p className="text-sm text-sky-800">
-              <strong>Praxient demo:</strong> Practice Profile, Availability, Appointment Types,
-              and Appointments are stored in Supabase. This is stakeholder demonstration code, not
-              a production system.
-            </p>
-          </div>
-
+        {/* Page content */}
+        <main className="flex-1 p-4 lg:p-8">
           {loading ? (
             <div className="min-h-[40vh] flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
+              <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-200 border-t-navy-800"></div>
             </div>
           ) : error ? (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-800">
+            <div className="max-w-xl bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-800">
               {error}
             </div>
           ) : (
-            <Outlet />
+            <div className="max-w-6xl mx-auto">
+              <Outlet />
+            </div>
           )}
         </main>
       </div>

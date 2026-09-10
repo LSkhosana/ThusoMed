@@ -154,6 +154,26 @@ export function normalizeTime(value: string | null | undefined): string {
   return value.slice(0, 5);
 }
 
+/**
+ * Formats a Date as YYYY-MM-DD in local time.
+ * (toISOString() converts to UTC and can shift the calendar day.)
+ */
+export function toLocalDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+const randFormatter = new Intl.NumberFormat('en-ZA', {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+});
+
+export function formatRand(value: number): string {
+  return `R ${randFormatter.format(value)}`;
+}
+
 export function generateConfirmationNumber(typeName: string): string {
   const prefix = typeName.replace(/[^A-Za-z]/g, '').substring(0, 2).toUpperCase() || 'PX';
   const year = new Date().getFullYear();

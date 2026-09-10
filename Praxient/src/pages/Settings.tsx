@@ -7,7 +7,8 @@ import { useToast } from '../components/ui/Toast';
 import { Settings as SettingsType } from '../types';
 
 const BRAND_COLORS = [
-  { value: '#0284C7', label: 'Sky Blue', color: 'bg-sky-500' },
+  { value: '#1B3157', label: 'Praxient Navy', color: 'bg-navy-800' },
+  { value: '#2E96BC', label: 'Praxient Teal', color: 'bg-teal-500' },
   { value: '#0F172A', label: 'Slate', color: 'bg-slate-800' },
   { value: '#059669', label: 'Emerald', color: 'bg-emerald-600' },
   { value: '#DC2626', label: 'Red', color: 'bg-red-600' },
@@ -17,7 +18,7 @@ const BRAND_COLORS = [
 
 export const SettingsPage: React.FC = () => {
   const [settings, setSettings] = useState<SettingsType>({
-    brandingColor: '#0284C7',
+    brandingColor: '#1B3157',
     smsRemindersEnabled: true,
     emailConfirmationsEnabled: true,
     paymentRequired: false,
@@ -61,8 +62,8 @@ export const SettingsPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
-          <p className="text-slate-600">
+          <h1 className="text-2xl font-bold text-navy-900 tracking-tight">Settings</h1>
+          <p className="text-slate-500 mt-1">
             Configure your practice preferences
           </p>
         </div>
@@ -102,7 +103,7 @@ export const SettingsPage: React.FC = () => {
                   onClick={() => updateSettings('brandingColor', color.value)}
                   className={`w-10 h-10 rounded-lg ${color.color} transition-all ${
                     settings.brandingColor === color.value
-                      ? 'ring-2 ring-offset-2 ring-slate-900'
+                      ? 'ring-2 ring-offset-2 ring-teal-600'
                       : ''
                   }`}
                   title={color.label}
@@ -119,7 +120,7 @@ export const SettingsPage: React.FC = () => {
       {/* SMS & Email */}
       <Card title="Communication" subtitle="Configure patient notifications">
         <div className="space-y-6">
-          <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
+          <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
             <Toggle
               label="SMS Reminders"
               description="Send SMS reminders for upcoming appointments"
@@ -129,7 +130,7 @@ export const SettingsPage: React.FC = () => {
               }
             />
             {settings.smsRemindersEnabled && (
-              <p className="text-xs text-sky-700 mt-3 flex items-center gap-1">
+              <p className="text-xs text-teal-800 mt-3 flex items-center gap-1">
                 <Info className="w-3 h-3" />
                 Demo only. No real SMS will be sent.
               </p>
@@ -146,7 +147,7 @@ export const SettingsPage: React.FC = () => {
               }
             />
             {settings.emailConfirmationsEnabled && (
-              <p className="text-xs text-sky-700 mt-2 flex items-center gap-1">
+              <p className="text-xs text-teal-800 mt-2 flex items-center gap-1">
                 <Info className="w-3 h-3" />
                 Demo only. No real email will be sent.
               </p>

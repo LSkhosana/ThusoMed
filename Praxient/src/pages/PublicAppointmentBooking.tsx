@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Stethoscope } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { BookingFlow } from '../components/booking/BookingFlow';
 import {
   AppointmentType,
@@ -14,6 +14,7 @@ import {
 } from '../lib/api';
 import { publicAppointmentsPath } from '../lib/booking';
 import { isSupabaseConfigured } from '../lib/supabase';
+import logo from '../assets/Praxient-Logo.jpeg';
 
 const PublicBookingInner: React.FC = () => {
   const { practiceSlug, appointmentSlug } = useParams();
@@ -57,37 +58,34 @@ const PublicBookingInner: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-paper">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-200 border-t-navy-800"></div>
       </div>
     );
   }
 
   if (error || !practice || !appointmentType || !availability) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+      <div className="min-h-screen flex items-center justify-center bg-paper p-6">
         <p className="text-slate-600">{error || 'Booking page not available.'}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-slate-900 text-white">
-        <div className="max-w-3xl mx-auto px-4 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center">
-              <Stethoscope className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-lg font-bold leading-tight">Praxient</p>
-              <p className="text-xs text-slate-400">{practice.practiceName}</p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-paper">
+      <header className="bg-paper border-b border-slate-200/80">
+        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
+          <img
+            src={logo}
+            alt="Praxient — Healthcare Connected"
+            className="h-11 w-auto object-contain"
+          />
           <Link
             to={publicAppointmentsPath(practice.slug)}
-            className="text-sm text-slate-300 hover:text-white"
+            className="inline-flex items-center gap-1 text-sm font-medium text-navy-800 hover:text-teal-700 transition-colors"
           >
+            <ChevronLeft className="w-4 h-4" />
             All appointments
           </Link>
         </div>
@@ -98,6 +96,9 @@ const PublicBookingInner: React.FC = () => {
           availability={availability}
           appointmentType={appointmentType}
         />
+        <p className="text-center text-xs text-slate-400 pt-8 pb-4">
+          Powered by Praxient · Healthcare Connected
+        </p>
       </main>
     </div>
   );

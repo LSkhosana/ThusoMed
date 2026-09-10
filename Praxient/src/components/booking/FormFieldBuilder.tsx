@@ -174,7 +174,7 @@ export const FormFieldBuilder: React.FC<FormFieldBuilderProps> = ({
             </div>
             <button
               onClick={() => handleOpenModal(field)}
-              className="p-2 text-slate-600 hover:text-sky-600 hover:bg-sky-50 rounded-lg"
+              className="p-2 text-slate-600 hover:text-teal-700 hover:bg-teal-50 rounded-md"
             >
               <Pencil className="w-4 h-4" />
             </button>

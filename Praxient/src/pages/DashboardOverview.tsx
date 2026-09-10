@@ -1,13 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  Calendar,
-  Clock,
-  ClipboardList,
-  CheckCircle,
-  User,
-  Link as LinkIcon,
-  ArrowRight,
-} from 'lucide-react';
+import { Calendar, Clock, ClipboardList, CheckCircle, User, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { usePractice } from '../context/PracticeContext';
@@ -20,35 +12,66 @@ const DEMO_STEPS = [
   { step: 3, label: 'Create an Appointment Type', to: '/dashboard/appointment-types' },
   { step: 4, label: 'Configure Booking Form', to: '/dashboard/appointment-types' },
   { step: 5, label: 'Configure Pre-Consultation Form', to: '/dashboard/appointment-types' },
-  { step: 6, label: 'Preview', to: '/dashboard/appointment-types' },
+  { step: 6, label: 'Preview the booking experience', to: '/dashboard/appointment-types' },
   { step: 7, label: 'Publish', to: '/dashboard/appointment-types' },
   { step: 8, label: 'Share the booking-page link', to: '/dashboard/appointment-types' },
   { step: 9, label: 'Patient books on the public page', to: '/dashboard/appointment-types' },
   { step: 10, label: 'Manage the booking in Appointments', to: '/dashboard/appointments' },
 ];
 
+const STATUS_DOT: Record<Appointment['status'], string> = {
+  pending: 'bg-amber-500',
+  confirmed: 'bg-emerald-500',
+  cancelled: 'bg-red-500',
+  completed: 'bg-slate-400',
+};
+
+const STATUS_BADGE: Record<Appointment['status'], string> = {
+  pending: 'bg-amber-50 text-amber-700 border border-amber-200',
+  confirmed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  cancelled: 'bg-red-50 text-red-700 border border-red-200',
+  completed: 'bg-slate-100 text-slate-600 border border-slate-200',
+};
+
+const StatSkeleton: React.FC = () => (
+  <div className="bg-white rounded-lg border border-slate-200 p-5 animate-pulse">
+    <div className="w-9 h-9 rounded-md bg-slate-100 mb-4" />
+    <div className="h-6 w-12 bg-slate-100 rounded mb-2" />
+    <div className="h-3 w-24 bg-slate-100 rounded" />
+  </div>
+);
+
 export const DashboardOverview: React.FC = () => {
   const { practice } = usePractice();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [appointmentTypes, setAppointmentTypes] = useState<AppointmentType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!practice) return;
-    void Promise.all([
-      listAppointments(practice.id),
-      listAppointmentTypes(practice.id),
-    ]).then(([loadedAppointments, loadedTypes]) => {
-      setAppointments(loadedAppointments);
-      setAppointmentTypes(loadedTypes);
-    });
+    let cancelled = false;
+    void Promise.all([listAppointments(practice.id), listAppointmentTypes(practice.id)])
+      .then(([loadedAppointments, loadedTypes]) => {
+        if (cancelled) return;
+        setAppointments(loadedAppointments);
+        setAppointmentTypes(loadedTypes);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [practice]);
 
   const stats = useMemo(() => {
     const today = new Date();
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - today.getDay());
+    weekStart.setHours(0, 0, 0, 0);
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
 
     const appointmentsThisWeek = appointments.filter((apt) => {
       const aptDate = new Date(apt.appointmentDate);
@@ -67,7 +90,9 @@ export const DashboardOverview: React.FC = () => {
       'province',
     ] as const;
     const filledFields = practice
-      ? requiredFields.filter((field) => practice[field] && practice[field].toString().trim() !== '')
+      ? requiredFields.filter(
+          (field) => practice[field] && practice[field].toString().trim() !== ''
+        )
       : [];
 
     return {
@@ -81,171 +106,140 @@ export const DashboardOverview: React.FC = () => {
     };
   }, [appointments, appointmentTypes, practice]);
 
+  const statCards = [
+    {
+      icon: Calendar,
+      iconClasses: 'bg-navy-100 text-navy-800',
+      value: stats.appointmentsThisWeek,
+      label: 'Appointments this week',
+    },
+    {
+      icon: Clock,
+      iconClasses: 'bg-amber-50 text-amber-600',
+      value: stats.pendingBookings,
+      label: 'Pending bookings',
+    },
+    {
+      icon: ClipboardList,
+      iconClasses: 'bg-teal-50 text-teal-700',
+      value: stats.activeAppointmentTypes,
+      label: 'Active appointment types',
+    },
+    {
+      icon: CheckCircle,
+      iconClasses: 'bg-emerald-50 text-emerald-600',
+      value: stats.publishedTypes,
+      label: 'Published types',
+    },
+    {
+      icon: User,
+      iconClasses: 'bg-slate-100 text-slate-600',
+      value: `${stats.profileCompletion}%`,
+      label: 'Profile completion',
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">
+      {/* Page header */}
+      <div>
+        <h1 className="text-2xl font-bold text-navy-900 tracking-tight">
           Welcome back, {practice?.practitionerName || 'Doctor'}
         </h1>
-        <p className="text-slate-600">
-          Use this Praxient demo to publish an appointment type and share a public booking link.
+        <p className="text-slate-500 mt-1">
+          Publish an appointment type and share your public booking link.
         </p>
       </div>
 
-      <Card title="Demo flow" subtitle="Walk through these steps for the stakeholder demo">
-        <ol className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {DEMO_STEPS.map((item) => (
-            <li key={item.step}>
-              <Link
-                to={item.to}
-                className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-sky-300 hover:bg-sky-50 transition-colors"
-              >
-                <span className="w-7 h-7 rounded-full bg-sky-600 text-white text-sm font-semibold flex items-center justify-center">
-                  {item.step}
-                </span>
-                <span className="text-sm font-medium text-slate-800">{item.label}</span>
-              </Link>
-            </li>
-          ))}
-        </ol>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-        <Card className="p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-sky-600" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.appointmentsThisWeek}</p>
-          <p className="text-sm text-slate-500">Appointments this week</p>
-        </Card>
-        <Card className="p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-              <Clock className="w-5 h-5 text-amber-600" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.pendingBookings}</p>
-          <p className="text-sm text-slate-500">Pending bookings</p>
-        </Card>
-        <Card className="p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-              <ClipboardList className="w-5 h-5 text-emerald-600" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.activeAppointmentTypes}</p>
-          <p className="text-sm text-slate-500">Active appointment types</p>
-        </Card>
-        <Card className="p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-sky-600" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.publishedTypes}</p>
-          <p className="text-sm text-slate-500">Published types</p>
-        </Card>
-        <Card className="p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-              <User className="w-5 h-5 text-slate-600" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.profileCompletion}%</p>
-          <p className="text-sm text-slate-500">Profile completion</p>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Link
-          to="/dashboard/profile"
-          className="group bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:border-sky-300 transition-colors"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
-              <User className="w-5 h-5 text-sky-600" />
-            </div>
-            <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-sky-600 transition-colors" />
-          </div>
-          <h3 className="font-semibold text-slate-900 mb-1">Practice Profile</h3>
-          <p className="text-sm text-slate-500">Update the single demo practice</p>
-        </Link>
-        <Link
-          to="/dashboard/availability"
-          className="group bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:border-sky-300 transition-colors"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-emerald-600" />
-            </div>
-            <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-600 transition-colors" />
-          </div>
-          <h3 className="font-semibold text-slate-900 mb-1">Availability</h3>
-          <p className="text-sm text-slate-500">Set one schedule across selected days</p>
-        </Link>
-        <Link
-          to="/dashboard/appointment-types"
-          className="group bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:border-sky-300 transition-colors"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-              <LinkIcon className="w-5 h-5 text-amber-600" />
-            </div>
-            <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-amber-600 transition-colors" />
-          </div>
-          <h3 className="font-semibold text-slate-900 mb-1">Publish & share</h3>
-          <p className="text-sm text-slate-500">Create a public Praxient booking link</p>
-        </Link>
-      </div>
-
-      <Card title="Recent Activity" subtitle="Latest appointment requests">
-        <div className="space-y-3">
-          {appointments.slice(0, 5).map((apt) => (
-            <div
-              key={apt.id}
-              className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
-            >
-              <div className="flex items-center gap-3">
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {isLoading
+          ? Array.from({ length: 5 }).map((_, index) => <StatSkeleton key={index} />)
+          : statCards.map((card) => (
+              <div key={card.label} className="bg-white rounded-lg border border-slate-200 p-5">
                 <div
-                  className={`w-2 h-2 rounded-full ${
-                    apt.status === 'pending'
-                      ? 'bg-amber-500'
-                      : apt.status === 'confirmed'
-                      ? 'bg-emerald-500'
-                      : apt.status === 'cancelled'
-                      ? 'bg-red-500'
-                      : 'bg-slate-400'
-                  }`}
-                />
-                <div>
-                  <p className="text-sm font-medium text-slate-900">{apt.patientDisplayName}</p>
-                  <p className="text-xs text-slate-500">
-                    {new Date(apt.appointmentDate).toLocaleDateString('en-ZA')} at {apt.appointmentTime}
-                  </p>
+                  className={`w-9 h-9 rounded-md flex items-center justify-center mb-4 ${card.iconClasses}`}
+                >
+                  <card.icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
                 </div>
+                <p className="text-2xl font-bold text-navy-900 tabular-nums">{card.value}</p>
+                <p className="text-[13px] text-slate-500 mt-0.5">{card.label}</p>
               </div>
-              <span
-                className={`text-xs font-medium px-2 py-1 rounded-full ${
-                  apt.status === 'pending'
-                    ? 'bg-amber-100 text-amber-700'
-                    : apt.status === 'confirmed'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : apt.status === 'cancelled'
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-slate-100 text-slate-700'
-                }`}
-              >
-                {apt.status}
-              </span>
-            </div>
-          ))}
-          {appointments.length === 0 && (
-            <p className="text-sm text-slate-500 text-center py-4">No appointments yet</p>
-          )}
+            ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Demo flow */}
+        <div className="lg:col-span-2">
+          <Card title="Demo walkthrough" subtitle="The end-to-end flow for stakeholders">
+            <ol className="space-y-1">
+              {DEMO_STEPS.map((item) => (
+                <li key={item.step}>
+                  <Link
+                    to={item.to}
+                    className="group flex items-center gap-3 px-2 py-1.5 -mx-2 rounded-md hover:bg-slate-50 transition-colors"
+                  >
+                    <span className="w-6 h-6 shrink-0 rounded-full border border-navy-200 bg-navy-50 text-navy-800 text-[11px] font-semibold flex items-center justify-center tabular-nums">
+                      {item.step}
+                    </span>
+                    <span className="text-sm text-slate-700 group-hover:text-navy-900">
+                      {item.label}
+                    </span>
+                    <ArrowRight className="w-3.5 h-3.5 ml-auto text-slate-300 group-hover:text-teal-600 transition-colors" />
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </Card>
         </div>
-      </Card>
+
+        {/* Recent activity */}
+        <div className="lg:col-span-3">
+          <Card title="Recent activity" subtitle="Latest appointment requests">
+            {isLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="h-14 bg-slate-50 border border-slate-100 rounded-md animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {appointments.slice(0, 6).map((apt) => (
+                  <div key={apt.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-2 h-2 shrink-0 rounded-full ${STATUS_DOT[apt.status]}`} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">
+                          {apt.patientDisplayName}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {new Date(apt.appointmentDate).toLocaleDateString('en-ZA', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                          })}{' '}
+                          · {apt.appointmentTime}
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[11px] font-semibold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[apt.status]}`}
+                    >
+                      {apt.status}
+                    </span>
+                  </div>
+                ))}
+                {appointments.length === 0 && (
+                  <p className="text-sm text-slate-500 text-center py-6">No appointments yet</p>
+                )}
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

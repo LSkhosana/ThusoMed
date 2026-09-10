@@ -55,7 +55,7 @@ export const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
                     key={option}
                     className={`flex items-center gap-2 px-4 py-2 border rounded-lg ${
                       disabled ? 'cursor-not-allowed' : 'cursor-pointer'
-                    } ${value === option ? 'border-sky-600 bg-sky-50' : 'border-slate-300'}`}
+                    } ${value === option ? 'border-teal-600 bg-teal-50' : 'border-slate-300'}`}
                   >
                     <input
                       type="radio"
