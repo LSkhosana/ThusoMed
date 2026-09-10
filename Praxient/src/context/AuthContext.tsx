@@ -28,6 +28,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const login = (email: string, password: string): boolean => {
+    void password;
     // Demo mode: accept any credentials
     // In real app, this would validate against stored account
     const savedAccount = storage.getAccount();

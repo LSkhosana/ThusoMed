@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ClipboardList,
   Plus,
-  GripVertical,
   Trash2,
   Pencil,
   Check,

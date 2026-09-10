@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Save, Info, MessageSquare, Mail, CreditCard, Bell } from 'lucide-react';
+import React, { useState } from 'react';
+import { Save, Info, MessageSquare, Mail, CreditCard } from 'lucide-react';
 import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
 import { Toggle } from '../components/ui/Toggle';
 import { Button } from '../components/ui/Button';
 import { useToast } from '../components/ui/Toast';
-import { storage } from '../utils/storage';
 import { Settings as SettingsType } from '../types';
 
 const BRAND_COLORS = [
@@ -33,21 +31,12 @@ export const SettingsPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const { showToast } = useToast();
 
-  useEffect(() => {
-    const savedSettings = storage.getSettings();
-    if (savedSettings) {
-      setSettings(savedSettings);
-    }
-  }, []);
-
   const handleSave = () => {
     setIsSaving(true);
-    storage.setSettings(settings);
-
     setTimeout(() => {
       setIsSaving(false);
-      showToast('Settings saved successfully!', 'success');
-    }, 800);
+      showToast('Demo settings are not persisted. Communication and payments are not live.', 'info');
+    }, 400);
   };
 
   const updateSettings = (key: keyof SettingsType, value: unknown) => {
@@ -92,8 +81,8 @@ export const SettingsPage: React.FC = () => {
               Demo Mode Settings
             </p>
             <p className="text-xs text-amber-700 mt-1">
-              These settings are saved locally only. In the live system, they
-              would control integrations and notifications.
+              These toggles are UI-only for the stakeholder demo. They do not
+              send SMS, email, or take payments.
             </p>
           </div>
         </div>

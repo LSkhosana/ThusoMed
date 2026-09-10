@@ -9,8 +9,15 @@ export interface PracticeAccount {
   createdAt: string;
 }
 
+export interface OperatingHours {
+  weekdays: { start: string; end: string };
+  saturday: { start: string; end: string; enabled: boolean };
+  sunday: { start: string; end: string; enabled: boolean };
+}
+
 export interface PracticeProfile {
   id: string;
+  slug: string;
   practiceName: string;
   practitionerName: string;
   specialty: string;
@@ -24,18 +31,19 @@ export interface PracticeProfile {
   phone: string;
   email: string;
   website: string;
-  operatingHours: {
-    weekdays: { start: string; end: string };
-    saturday: { start: string; end: string; enabled: boolean };
-    sunday: { start: string; end: string; enabled: boolean };
-  };
+  operatingHours: OperatingHours;
   emergencyDisclaimer: string;
-  profileImage: string | null;
+  profileImageUrl: string | null;
+  brandingColor: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AppointmentType {
   id: string;
+  practiceId: string;
   name: string;
+  slug: string;
   description: string;
   durationMinutes: number;
   price: number;
@@ -44,16 +52,25 @@ export interface AppointmentType {
   depositType: 'percentage' | 'fixed';
   maxBookingsPerDay: number;
   isActive: boolean;
+  isPublished: boolean;
+  bookingFormFields: BookingFormField[];
+  preConsultationFormFields: BookingFormField[];
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface ScheduleSettings {
+export interface AvailabilitySettings {
+  id: string;
+  practiceId: string;
   availableDays: string[];
   startTime: string;
   endTime: string;
-  breakStart: string;
-  breakEnd: string;
-  slotInterval: number;
+  breakStart: string | null;
+  breakEnd: string | null;
+  slotIntervalMinutes: number;
   blockedDates: string[];
+  updatedAt: string;
 }
 
 export interface BookingFormField {
@@ -75,29 +92,28 @@ export interface BookingForm {
   isActive: boolean;
 }
 
+export type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+export type PaymentStatus = 'not_required' | 'pending' | 'paid' | 'failed';
+export type FormAnswers = Record<string, string | boolean | string[]>;
+
 export interface Appointment {
   id: string;
+  practiceId: string;
   appointmentTypeId: string;
-  date: string;
-  time: string;
-  patientFirstName: string;
-  patientLastName: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  bookingAnswers: FormAnswers;
+  preConsultationAnswers: FormAnswers;
+  patientDisplayName: string;
   patientEmail: string;
   patientPhone: string;
-  reasonForVisit: string;
-  hasMedicalAid: boolean;
-  medicalAidScheme?: string;
-  memberNumber?: string;
-  currentMedications?: string;
-  allergies?: string;
-  recentSymptoms?: string;
-  formAnswers: Record<string, string>;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  paymentStatus: 'not_required' | 'pending' | 'paid' | 'failed';
-  isPriority: boolean;
-  notes: string;
+  status: AppointmentStatus;
+  paymentStatus: PaymentStatus;
+  paymentAmount: number;
   confirmationNumber: string;
+  notes: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface Settings {
@@ -112,6 +128,8 @@ export interface Settings {
     reminder: boolean;
   };
 }
+
+export type ScheduleSettings = AvailabilitySettings;
 
 export interface DashboardStats {
   appointmentsThisWeek: number;

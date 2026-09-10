@@ -1,10 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   User,
   MapPin,
   Phone,
-  Mail,
-  Globe,
   Clock,
   Shield,
   Calendar,
@@ -14,12 +12,20 @@ import {
 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { storage } from '../utils/storage';
+import { usePractice } from '../context/PracticeContext';
+import { listAppointmentTypes } from '../lib/api';
+import { AppointmentType } from '../types';
 
 export const PatientAppPreviewPage: React.FC = () => {
-  const profile = storage.getProfile();
-  const appointmentTypes = storage.getAppointmentTypes().filter((t) => t.isActive);
-  const scheduleSettings = storage.getScheduleSettings();
+  const { practice: profile } = usePractice();
+  const [appointmentTypes, setAppointmentTypes] = useState<AppointmentType[]>([]);
+
+  useEffect(() => {
+    if (!profile) return;
+    void listAppointmentTypes(profile.id).then((types) => {
+      setAppointmentTypes(types.filter((type) => type.isActive));
+    });
+  }, [profile]);
 
   const operatingHours = useMemo(() => {
     if (!profile?.operatingHours) return [];
@@ -54,7 +60,7 @@ export const PatientAppPreviewPage: React.FC = () => {
             Patient App Preview
           </h1>
           <p className="text-slate-600">
-            How your practice appears in the ThusoMed patient app
+            How your practice appears in the Praxient patient app
           </p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-sky-50 border border-sky-200 rounded-full">
@@ -69,7 +75,7 @@ export const PatientAppPreviewPage: React.FC = () => {
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
         <p className="text-sm text-amber-800">
           <strong>Note:</strong> This preview shows how the same practice data
-          can later power the ThusoMed patient-facing app. All information is
+          can later power the Praxient patient-facing app. All information is
           pulled from your practice profile.
         </p>
       </div>
@@ -80,7 +86,7 @@ export const PatientAppPreviewPage: React.FC = () => {
           <div className="bg-white rounded-[32px] overflow-hidden">
             {/* Phone Header */}
             <div className="bg-sky-600 px-5 py-4 text-white">
-              <p className="text-xs text-sky-200">ThusoMed</p>
+              <p className="text-xs text-sky-200">Praxient</p>
               <p className="text-lg font-bold">Find a Doctor</p>
             </div>
 

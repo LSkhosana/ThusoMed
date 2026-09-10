@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  User,
-  Building,
   Mail,
   Phone,
   Globe,
   MapPin,
-  Clock,
   Shield,
   AlertTriangle,
   Upload,
@@ -18,7 +15,9 @@ import { Textarea } from '../components/ui/Textarea';
 import { Select } from '../components/ui/Select';
 import { Button } from '../components/ui/Button';
 import { useToast } from '../components/ui/Toast';
-import { storage } from '../utils/storage';
+import { usePractice } from '../context/PracticeContext';
+import { updatePractice } from '../lib/api';
+import { isUrlSafeSlug, slugify } from '../lib/booking';
 import { PracticeProfile } from '../types';
 
 const PROVINCES = [
@@ -47,6 +46,7 @@ const FORBIDDEN_TERMS = [
 ];
 
 export const PracticeProfilePage: React.FC = () => {
+  const { practice, setPractice } = usePractice();
   const [profile, setProfile] = useState<PracticeProfile | null>(null);
   const [servicesInput, setServicesInput] = useState('');
   const [medicalAidsInput, setMedicalAidsInput] = useState('');
@@ -55,39 +55,11 @@ export const PracticeProfilePage: React.FC = () => {
   const { showToast } = useToast();
 
   useEffect(() => {
-    const savedProfile = storage.getProfile();
-    if (savedProfile) {
-      setProfile(savedProfile);
-      setServicesInput(savedProfile.services.join('\n'));
-      setMedicalAidsInput(savedProfile.medicalAids.join('\n'));
-    } else {
-      // Initialize with default structure
-      setProfile({
-        id: '',
-        practiceName: '',
-        practitionerName: '',
-        specialty: '',
-        hpcsaNumber: '',
-        description: '',
-        services: [],
-        medicalAids: [],
-        address: '',
-        city: '',
-        province: '',
-        phone: '',
-        email: '',
-        website: '',
-        operatingHours: {
-          weekdays: { start: '08:00', end: '17:00' },
-          saturday: { start: '08:00', end: '12:00', enabled: false },
-          sunday: { start: '00:00', end: '00:00', enabled: false },
-        },
-        emergencyDisclaimer:
-          'For medical emergencies, please dial 10177 or visit your nearest emergency room.',
-        profileImage: null,
-      });
-    }
-  }, []);
+    if (!practice) return;
+    setProfile(practice);
+    setServicesInput(practice.services.join('\n'));
+    setMedicalAidsInput(practice.medicalAids.join('\n'));
+  }, [practice]);
 
   const checkDescription = (text: string) => {
     const lowerText = text.toLowerCase();
@@ -139,20 +111,30 @@ export const PracticeProfilePage: React.FC = () => {
   const handleSave = async () => {
     if (!profile) return;
 
+    const nextSlug = slugify(profile.slug || profile.practiceName);
+    if (!isUrlSafeSlug(nextSlug)) {
+      showToast('Slug must be URL-safe, for example dr-mokoena', 'error');
+      return;
+    }
+
     setIsSaving(true);
     const updatedProfile = {
       ...profile,
+      slug: nextSlug,
       services: parseList(servicesInput),
       medicalAids: parseList(medicalAidsInput),
     };
 
-    storage.setProfile(updatedProfile);
-    setProfile(updatedProfile);
-
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      const saved = await updatePractice(profile.id, updatedProfile);
+      setProfile(saved);
+      setPractice(saved);
       showToast('Practice profile saved successfully!', 'success');
-    }, 800);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Unable to save profile', 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!profile) return null;
@@ -202,6 +184,14 @@ export const PracticeProfilePage: React.FC = () => {
                 value={profile.practiceName}
                 onChange={(e) => handleChange('practiceName', e.target.value)}
                 required
+              />
+              <Input
+                label="Public slug"
+                placeholder="e.g., dr-mokoena"
+                value={profile.slug}
+                onChange={(e) => handleChange('slug', e.target.value)}
+                required
+                helpText="Used in the public booking URL. Letters, numbers, and hyphens only."
               />
               <Input
                 label="Practitioner Name"
@@ -415,9 +405,9 @@ export const PracticeProfilePage: React.FC = () => {
               {/* Header */}
               <div className="flex items-start gap-4">
                 <div className="w-20 h-20 bg-slate-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                  {profile.profileImage ? (
+                  {profile.profileImageUrl ? (
                     <img
-                      src={profile.profileImage}
+                      src={profile.profileImageUrl}
                       alt="Profile"
                       className="w-full h-full object-cover rounded-lg"
                     />

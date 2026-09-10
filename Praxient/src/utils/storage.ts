@@ -2,7 +2,7 @@ import {
   PracticeAccount,
   PracticeProfile,
   AppointmentType,
-  ScheduleSettings,
+  AvailabilitySettings,
   BookingForm,
   Appointment,
   Settings,
@@ -50,12 +50,12 @@ export const storage = {
     localStorage.setItem(KEYS.APPOINTMENT_TYPES, JSON.stringify(types));
   },
 
-  getScheduleSettings: (): ScheduleSettings | null => {
+  getScheduleSettings: (): AvailabilitySettings | null => {
     const data = localStorage.getItem(KEYS.SCHEDULE);
     return data ? JSON.parse(data) : null;
   },
 
-  setScheduleSettings: (settings: ScheduleSettings): void => {
+  setScheduleSettings: (settings: AvailabilitySettings): void => {
     localStorage.setItem(KEYS.SCHEDULE, JSON.stringify(settings));
   },
 
@@ -87,6 +87,6 @@ export const storage = {
   },
 
   clearAll: (): void => {
-    Object.values(KEYS).forEach(key => localStorage.removeItem(key));
+    Object.values(KEYS).forEach((key) => localStorage.removeItem(key));
   },
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Code, Copy, Check, Info, ExternalLink } from 'lucide-react';
+import { Code, Copy, Check, Info } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useToast } from '../components/ui/Toast';
